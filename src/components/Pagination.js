@@ -1,3 +1,5 @@
+import PropTypes from "prop-types";
+
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   if (!totalPages || totalPages < 1) return null;
 
@@ -22,6 +24,12 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
       </button>
     </div>
   );
+};
+
+Pagination.propTypes = {
+  currentPage: PropTypes.number.isRequired,
+  totalPages: PropTypes.number.isRequired,
+  onPageChange: PropTypes.func.isRequired,
 };
 
 export default Pagination;

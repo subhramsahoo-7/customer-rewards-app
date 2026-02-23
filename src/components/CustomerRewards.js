@@ -1,181 +1,206 @@
-import React, { useEffect, useState } from "react";
-import { fetchTransactions } from "../services/api";
+import React, { useState, useMemo } from "react";
+import { useTransactions } from "../hooks/useTransactions";
 import { calculatePoints } from "../utils/rewards";
-import Loader from "./Loader";
-import Pagination from "./Pagination";
+import { APP_CONSTANTS } from "../constants/appConstants";
+import {
+  Container,
+  Typography,
+  Select,
+  MenuItem,
+  Paper,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  CircularProgress,
+  Alert,
+  Box,
+} from "@mui/material";
+import Pagination from "@mui/material/Pagination";
 
 const CustomerRewards = () => {
-  const [transactions, setTransactions] = useState([]);
+  const { transactions, loading, error } = useTransactions();
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [selectedMonth, setSelectedMonth] = useState("last3");
-  const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 2;
+  const [currentPage, setCurrentPage] = useState(APP_CONSTANTS.INITIAL_PAGE);
+  const pageSize = APP_CONSTANTS.PAGE_SIZE;
 
-useEffect(() => {
-  setLoading(true);
-  fetchTransactions().then((data) => {
-    setTimeout(() => {   
-      setTransactions(data || []);
-      if (data && data.length > 0) {
-        setSelectedCustomer(data[0].customerId);
-      }
-      setLoading(false);
-    }, 2000); 
-  });
-}, []);
-
-  if (loading) {
-    return <Loader />;
-  }
-
-  
+  // ✅ Helper: unique customers
   const getUniqueCustomers = () => {
     if (!transactions || transactions.length === 0) return [];
-    const ids = [...new Set(transactions.map((t) => t.customerId))];
-    return ids.map((id) => ({
-      id,
-      name: "Customer " + id,
-    }));
+    const ids = [...new Set(transactions.map((txn) => txn.customerId))];
+    return ids.map((id) => ({ id, name: "Customer " + id }));
   };
 
+  // ✅ Helper: filter transactions
   const filterTransactions = () => {
-    if (!selectedCustomer) return []; 
-
-    let filtered = transactions.filter((t) => t.customerId === selectedCustomer);
+    if (!selectedCustomer) return [];
+    let filtered = transactions.filter(
+      (txn) => txn.customerId === selectedCustomer
+    );
 
     if (selectedMonth !== "last3") {
-      filtered = filtered.filter((t) => {
-        const d = new Date(t.date);
-        const monthName = d.toLocaleString("default", { month: "short" });
+      filtered = filtered.filter((txn) => {
+        const date = new Date(txn.date);
+        const monthName = date.toLocaleString("default", { month: "short" });
         return monthName === selectedMonth;
       });
     } else {
       const now = new Date();
       const threeMonthsAgo = new Date();
       threeMonthsAgo.setMonth(now.getMonth() - 2);
-      filtered = filtered.filter((t) => new Date(t.date) >= threeMonthsAgo);
+      filtered = filtered.filter((txn) => new Date(txn.date) >= threeMonthsAgo);
     }
 
     return filtered || [];
   };
 
+  // ✅ Helper: summarize points
   const summarizePoints = (filtered) => {
     const summary = {};
-    let total = 0;
-
-    (filtered || []).forEach((t) => {
-      const d = new Date(t.date);
-      const month = d.toLocaleString("default", { month: "short" });
-      const pts = calculatePoints(t.amount);
-
-      summary[month] = (summary[month] || 0) + pts;
-      total += pts;
+    (filtered || []).forEach((txn) => {
+      const date = new Date(txn.date);
+      const month = date.toLocaleString("default", { month: "short" });
+      const points = calculatePoints(txn.amount);
+      summary[month] = (summary[month] || 0) + points;
     });
-
-    return { summary, total };
+    return summary;
   };
 
- 
   const customers = getUniqueCustomers();
   const filtered = filterTransactions();
-  const { summary, total } = summarizePoints(filtered);
 
-  const totalPages = filtered.length > 0 ? Math.ceil(filtered.length / pageSize) : 1;
-  const paginatedTransactions = filtered.length > 0
-    ? filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize)
-    : [];
+  // ✅ useMemo for expensive calculations
+  const summary = useMemo(() => summarizePoints(filtered), [filtered]);
+  const totalPoints = useMemo(
+    () => filtered.reduce((sum, txn) => sum + calculatePoints(txn.amount), 0),
+    [filtered]
+  );
+
+  if (loading)
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
+  if (error) return <Alert severity="error">{error}</Alert>;
+
+  const totalPages =
+    filtered.length > 0 ? Math.ceil(filtered.length / pageSize) : 1;
+  const paginatedTransactions =
+    filtered.length > 0
+      ? filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+      : [];
 
   return (
-    <div style={{ padding: 20 }}>
-      <h2>Customer Rewards Program</h2>
+    <Container maxWidth="lg" sx={{ mt: 4 }}>
+      <Typography variant="h4" color="primary" gutterBottom>
+        Customer Rewards Program
+      </Typography>
 
-      <label>Select Customer: </label>
-      {customers.length > 0 ? (
-        <select
-          value={selectedCustomer || ""}
-          onChange={(e) => setSelectedCustomer(Number(e.target.value))}
-        >
-          {customers.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-      ) : (
-        <span>No customers available</span>
-      )}
+      {/* Dropdowns with static labels above */}
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3, mb: 3 }}>
+        <Box sx={{ minWidth: 250, flex: 1 }}>
+          <Typography variant="subtitle2" sx={{ mb: 1 }}>
+            Customer
+          </Typography>
+          <Select
+            fullWidth
+            value={selectedCustomer || ""}
+            onChange={(e) => setSelectedCustomer(Number(e.target.value))}
+          >
+            {customers.map((customer) => (
+              <MenuItem key={customer.id} value={customer.id}>
+                {customer.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </Box>
 
-      <label style={{ marginLeft: 20 }}>Select Month: </label>
-      <select
-        value={selectedMonth}
-        onChange={(e) => setSelectedMonth(e.target.value)}
-      >
-        <option value="last3">Last 3 Months</option>
-        <option value="Jan">Jan</option>
-        <option value="Feb">Feb</option>
-        <option value="Mar">Mar</option>
-        <option value="Apr">Apr</option>
-        <option value="May">May</option>
-        <option value="Jun">Jun</option>
-        <option value="Jul">Jul</option>
-        <option value="Aug">Aug</option>
-        <option value="Sep">Sep</option>
-        <option value="Oct">Oct</option>
-        <option value="Nov">Nov</option>
-        <option value="Dec">Dec</option>
-      </select>
+        <Box sx={{ minWidth: 250, flex: 1 }}>
+          <Typography variant="subtitle2" sx={{ mb: 1 }}>
+            Month
+          </Typography>
+          <Select
+            fullWidth
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+          >
+            <MenuItem value="last3">Last 3 Months</MenuItem>
+            {[
+              "Jan","Feb","Mar","Apr","May","Jun",
+              "Jul","Aug","Sep","Oct","Nov","Dec"
+            ].map((month) => (
+              <MenuItem key={month} value={month}>{month}</MenuItem>
+            ))}
+          </Select>
+        </Box>
+      </Box>
 
-      <div style={{ marginTop: 20 }}>
-        <h3>Monthly Points</h3>
+      {/* Monthly Points Section */}
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          Monthly Points
+        </Typography>
         {Object.keys(summary).length > 0 ? (
           <ul>
-            {Object.entries(summary).map(([month, pts]) => (
+            {Object.entries(summary).map(([month, points]) => (
               <li key={month}>
-                {month}: {pts} points
+                {month}: {points} points
               </li>
             ))}
           </ul>
         ) : (
-          <p>No points available for this selection.</p>
+          <Typography>No points available for this selection.</Typography>
         )}
-        <strong>Total Points: {total}</strong>
-      </div>
+        <Typography variant="subtitle1" sx={{ mt: 2, fontWeight: "bold" }}>
+          Total Points: {totalPoints}
+        </Typography>
+      </Paper>
 
-      <div style={{ marginTop: 20 }}>
-        <h3>Transactions</h3>
+      {/* Transactions Section */}
+      <Paper sx={{ p: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          Transactions
+        </Typography>
         {paginatedTransactions.length > 0 ? (
-          <table border="1" cellPadding="8">
-            <thead>
-              <tr>
-                <th>Transaction ID</th>
-                <th>Date</th>
-                <th>Amount</th>
-                <th>Points</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedTransactions.map((t) => (
-                <tr key={t.transactionId}>
-                  <td>{t.transactionId}</td>
-                  <td>{t.date}</td>
-                  <td>${t.amount}</td>
-                  <td>{calculatePoints(t.amount)}</td>
-                </tr>
+          <Table>
+            <TableHead sx={{ backgroundColor: "#1976d2" }}>
+              <TableRow>
+                <TableCell sx={{ color: "white" }}>Transaction ID</TableCell>
+                <TableCell sx={{ color: "white" }}>Date</TableCell>
+                <TableCell sx={{ color: "white" }}>Amount</TableCell>
+                <TableCell sx={{ color: "white" }}>Points</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {paginatedTransactions.map((transaction) => (
+                <TableRow key={transaction.transactionId}>
+                  <TableCell>{transaction.transactionId}</TableCell>
+                  <TableCell>{transaction.date}</TableCell>
+                  <TableCell>${transaction.amount}</TableCell>
+                  <TableCell>{calculatePoints(transaction.amount)}</TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         ) : (
-          <p>No transactions available for this selection.</p>
+          <Typography>No transactions available for this selection.</Typography>
         )}
 
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={setCurrentPage}
-        />
-      </div>
-    </div>
+        {paginatedTransactions.length > 0 && (
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+            <Pagination
+              count={totalPages}
+              page={currentPage}
+              onChange={(e, value) => setCurrentPage(value)}
+              color="primary"
+            />
+          </Box>
+        )}
+      </Paper>
+    </Container>
   );
 };
 
