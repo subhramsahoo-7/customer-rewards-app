@@ -26,4 +26,16 @@ describe("calculatePoints", () => {
   test("non-numeric input should return 0 points", () => {
     expect(calculatePoints("abc")).toBe(0);
   });
+  // Fractional value cases
+  test("fractional amount between 51 and 100 should calculate correctly", () => {
+    expect(calculatePoints(75.5)).toBe(25.5);
+  });
+
+  test("fractional amount > 100 should calculate correctly", () => {
+    expect(calculatePoints(150.25)).toBe(150.5);
+  });
+
+  test("fractional amount just below 100 should calculate correctly", () => {
+    expect(calculatePoints(95.8)).toBe(45.8);
+  });
 });

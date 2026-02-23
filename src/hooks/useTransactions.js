@@ -9,14 +9,13 @@ export const useTransactions = () => {
   useEffect(() => {
     const loadTransactions = async () => {
       try {
-        const response = await fetchTransactions();
+        const data = await fetchTransactions();
 
-       
-        if (!response || !Array.isArray(response)) {
-          throw new Error("Invalid response from server");
+        if (!data || !Array.isArray(data)) {
+          throw new Error("Invalid response format");
         }
 
-        setTransactions(response);
+        setTransactions(data);
       } catch (err) {
         setError(err.message || "Failed to fetch transactions");
       } finally {

@@ -16,32 +16,64 @@ This app demonstrates "reward calculation logic", "monthly summaries", and moder
 - Monthly & Total Summary: Points breakdown per month plus overall total.
 - Transactions Table: Displays transaction ID, date, amount, and points.
 - Pagination: Transactions split into pages (configurable page size).
-- Loader/Spinner**: Shows while data is being fetched for a smooth experience.
-
+- Loader/Spinner\*\*: Shows while data is being fetched for a smooth experience.
 
 ---
 
 ## Project Structure
 
+## 📂 Project Structure
+
 rewards-app/
 ├── public/
 │ └── data/
-│ └── transactions.json # Customer transaction data
+│ └── transactions.json # Customer transaction data (mock API)
 ├── src/
 │ ├── components/
 │ │ ├── CustomerRewards.js # Main rewards component
-│ │ ├── Pagination.js # Pagination component
-│ │ └── Loader.js # Loader/spinner component
+│ │ ├── CustomerDropdown.js # Customer selection dropdown
+│ │ ├── MonthDropdown.js # Month filter dropdown
+│ │ ├── PointsSummary.js # Monthly & total points summary
+│ │ └── TransactionsTable.js # Transactions table with pagination
+│ ├── constants/
+│ │ └── appConstants.js # Application constants
+│ ├── hooks/
+│ │ └── useTransactions.js # Custom hook for fetching transactions
 │ ├── services/
-│ │ └── api.js # Fetch transactions
-│ ├── utils/
-│ │ └── rewards.js # Reward calculation logic
-│ └── test/
-│ └── rewards.test.js # Unit tests for calculatePoints
+│ │ └── api.js # API fetch logic with status check
+│ ├── styles/
+│ │ └── table.css # Table styling
+│ ├── test/
+│ │ └── rewards.test.js # Unit tests for calculatePoints
+│ └── utils/
+│ └── rewards.js # Reward calculation logic
 ├── package.json
 └── README.md
-Setup
 
+---
+
+## UI Screenshot
+
+![Customer Rewards UI](./screenshots/ui.png)
+
+![alt text](image.png)
+
+---
+
+## Unit Tests
+
+Tests passed, including fractional values:
+
+![Test Results](./screenshots/tests.png)!
+[alt text](image-1.png)
+
+---
+
+## Setup
+
+- Install dependencies:
+  bash
+  npm install
 - Install dependencies:
   npm install
 - Start the development server:
@@ -71,7 +103,3 @@ Example Test Cases
 - Amount = 0 → returns 0.
 - Negative amount → returns 0.
 - Non‑numeric input → returns 0.
-
-
-
-

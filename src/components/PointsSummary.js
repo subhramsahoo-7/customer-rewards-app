@@ -1,3 +1,6 @@
+// Displays monthly points summary and total points
+// Props: summary (object), totalPoints (number)
+
 import PropTypes from "prop-types";
 import { Paper, Typography } from "@mui/material";
 

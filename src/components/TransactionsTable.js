@@ -1,3 +1,6 @@
+// Displays transactions in a table with pagination
+// Props: transactions (array), currentPage (number), totalPages (number), onPageChange (function)
+
 import PropTypes from "prop-types";
 import {
   Paper,

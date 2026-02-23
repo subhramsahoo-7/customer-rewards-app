@@ -1,3 +1,6 @@
+// Dropdown for selecting a month or last 3 months
+// Props: selectedMonth (string), onChange (function)
+
 import PropTypes from "prop-types";
 import { Box, Typography, Select, MenuItem } from "@mui/material";
 

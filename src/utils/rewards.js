@@ -1,16 +1,12 @@
-// 
-
-
-
 export const calculatePoints = (amount) => {
-  let points = 0;
+  const num = Number(amount);
 
-  if (amount > 100) {
-    points += (amount - 100) * 2;   // 2 points for every $ over 100
-    points += 50;                   // 1 point for every $ between 50–100
-  } else if (amount > 50) {
-    points += (amount - 50);        // 1 point for every $ between 50–100
+  if (isNaN(num) || num <= 0) return 0;
+
+  if (num > 100) {
+    return (num - 100) * 2 + 50;
+  } else if (num > 50) {
+    return num - 50;
   }
-
-  return Math.floor(points); // ensure integer points
+  return 0;
 };
