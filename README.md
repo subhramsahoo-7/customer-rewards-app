@@ -53,10 +53,7 @@ rewards-app/
 ---
 
 ## UI Screenshot
-
-![Customer Rewards UI](./screenshots/ui.png)
-
-![alt text](image.png)
+![alt text](Screenshots/ui.png)
 
 ---
 
@@ -64,8 +61,8 @@ rewards-app/
 
 Tests passed, including fractional values:
 
-![Test Results](./screenshots/tests.png)!
-[alt text](image-1.png)
+
+![alt text](Screenshots/testresult.png)
 
 ---
 
